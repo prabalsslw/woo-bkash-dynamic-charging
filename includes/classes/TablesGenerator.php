@@ -68,7 +68,7 @@ class TablesGenerator {
 	final public function createWebhookTable() {
 		global $wpdb;
 		$table_name             = $wpdb->prefix . 'bkash_dc_webhooks';
-		$my_products_db_version = BKASH_FW_PGW_VERSION;
+		$my_products_db_version = BKASH_DC_PGW_VERSION;
 		$charset_collate        = $wpdb->get_charset_collate();
 
 		if ( $wpdb->get_var( $this->prepareQuery( $table_name ) ) !== $table_name ) {
@@ -101,7 +101,7 @@ class TablesGenerator {
 	final public function createAgreementMappingTable() {
 		global $wpdb;
 		$table_name             = $wpdb->prefix . 'bkash_dc_agreement_mapping';
-		$my_products_db_version = BKASH_FW_PGW_VERSION;
+		$my_products_db_version = BKASH_DC_PGW_VERSION;
 		$charset_collate        = $wpdb->get_charset_collate();
 
 		if ( $wpdb->get_var( $this->prepareQuery( $table_name ) ) !== $table_name ) {
@@ -126,7 +126,7 @@ class TablesGenerator {
 	final public function createTransferHistoryTable() {
 		global $wpdb;
 		$table_name             = $wpdb->prefix . 'bkash_dc_transfers';
-		$my_products_db_version = BKASH_FW_PGW_VERSION;
+		$my_products_db_version = BKASH_DC_PGW_VERSION;
 		$charset_collate        = $wpdb->get_charset_collate();
 
 		if ( $wpdb->get_var( $this->prepareQuery( $table_name ) ) !== $table_name ) {

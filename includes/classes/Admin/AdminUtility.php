@@ -36,7 +36,7 @@ class AdminUtility {
 		$primaryColumn = 'ID';
 		$table_name    = Sanitizer::safeSqlString( $wpdb->prefix . $tbl_name );
 		$pageNumber    = Sanitizer::hasGetField( "pagenum" ) ? absint( Sanitizer::safeGetValue( "pagenum" ) ) : 1;
-		$limit         = BKASH_FW_TABLE_LIMIT;
+		$limit         = BKASH_DC_TABLE_LIMIT;
 		$offset        = ( $pageNumber - 1 ) * $limit;
 
 		$queryValue[] = 0; // primary columnn value for %d

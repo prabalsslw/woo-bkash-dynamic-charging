@@ -12,8 +12,8 @@
 
 namespace bKash\PGW\DC;
 
-// use bKash\PGW\Admin\AdminDashboard;
-// use bKash\PGW\Admin\AdminUtility;
+use bKash\PGW\DC\Admin\AdminDashboard;
+use bKash\PGW\DC\Admin\AdminUtility;
 
 class WooCommerceBkashDC {
 	/**

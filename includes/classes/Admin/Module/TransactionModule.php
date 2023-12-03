@@ -13,10 +13,10 @@
 namespace bKash\PGW\DC\Admin\Module;
 
 use bKash\PGW\DC\Admin\AdminUtility;
-use bKash\PGW\DC\ApiComm;
+use bKash\PGW\DC\BkashApi;
 use bKash\PGW\DC\Models\Transaction;
-use bKash\PGW\DC\PaymentGatewayBkash;
-use bKash\PGW\DC\Utils;
+use bKash\PGW\DC\WooCommerceBkashDC;
+use bKash\PGW\DC\Sanitizer;
 use Exception;
 
 class TransactionModule {
@@ -26,7 +26,7 @@ class TransactionModule {
 	public static function transactionList() {
 		AdminUtility::loadTable(
 			'All bKash Transaction',
-			'bkash_transactions',
+			'bkash_dc_transactions',
 			array(
 				'ORDER ID'         => 'order_id',
 				'INVOICE ID'       => 'invoice_id',
@@ -53,7 +53,7 @@ class TransactionModule {
 	 */
 	public static function transactionSearch() {
 		try {
-			$trx_id = Utils::safePostValue( 'trxid' );
+			$trx_id = Sanitizer::safePostValue( 'trxid' );
 
 			if ( ! empty( $trx_id ) ) {
 				$api  = new ApiComm();
@@ -86,12 +86,12 @@ class TransactionModule {
 
 	public static function refundATransaction() {
 		$trx           = '';
-		$trx_id        = Utils::safePostValue( 'trxid' ) ?? '';
-		$fill_trx_id   = Utils::safePostValue( 'fill_trx_id' ) ?? '';
-		$reason        = Utils::safePostValue( 'reason' ) ?? '';
-		$amount        = Utils::safePostValue( 'amount' ) ?? '';
-		$isRefund      = ! empty( Utils::hasPostField( 'refund' ) );
-		$isRefundCheck = ! empty( Utils::hasPostField( 'check' ) );
+		$trx_id        = Sanitizer::safePostValue( 'trxid' ) ?? '';
+		$fill_trx_id   = Sanitizer::safePostValue( 'fill_trx_id' ) ?? '';
+		$reason        = Sanitizer::safePostValue( 'reason' ) ?? '';
+		$amount        = Sanitizer::safePostValue( 'amount' ) ?? '';
+		$isRefund      = ! empty( Sanitizer::hasPostField( 'refund' ) );
+		$isRefundCheck = ! empty( Sanitizer::hasPostField( 'check' ) );
 
 		if ( ! empty( $trx_id ) ) {
 			$trxObject   = new Transaction();

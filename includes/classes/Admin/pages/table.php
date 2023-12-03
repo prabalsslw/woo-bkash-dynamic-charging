@@ -169,7 +169,7 @@ use bKash\PGW\DC\Sanitizer;
 								foreach ( $actions as $action ) {
 									$actionUrl = esc_url(
 										admin_url(
-											'admin.php?page=' . BKASH_FW_ADMIN_PAGE_SLUG . '/'
+											'admin.php?page=' . BKASH_DC_ADMIN_PAGE_SLUG . '/'
 											. ( $action['page'] ?? '' ) . '&action='
 											. ( $action['action'] ?? '' ) . '&id=' . $row->ID
 										)

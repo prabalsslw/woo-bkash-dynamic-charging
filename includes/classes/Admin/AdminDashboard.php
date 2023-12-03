@@ -13,10 +13,10 @@
 namespace bKash\PGW\DC\Admin;
 
 // use bKash\PGW\DC\Admin\Module\AgreementModule;
-// use bKash\PGW\DC\Admin\Module\TransactionModule;
+use bKash\PGW\DC\Admin\Module\TransactionModule;
 // use bKash\PGW\DC\Admin\Module\TransferModule;
 // use bKash\PGW\DC\Admin\Module\WebhookModule;
-use bKash\PGW\DC\TableGeneration;
+use bKash\PGW\DC\TablesGenerator;
 
 define( "BKASH_DC_PGW_VERSION", "v1" );
 define( "BKASH_DC_TABLE_LIMIT", 10 );
@@ -87,48 +87,48 @@ class AdminDashboard {
 				'function'   => array( TransactionModule::class, 'refundATransaction' ),
 				'show'       => true
 			),
-			array(
-				'title'      => 'Webhook notifications',
-				'menu_title' => 'Webhook',
-				'route'      => '/webhooks',
-				'function'   => array( WebhookModule::class, 'webhooks' ),
-				'show'       => $is_webhook_enabled
-			),
-			array(
-				'title'      => 'Check Balances',
-				'menu_title' => 'Check Balances',
-				'route'      => '/balances',
-				'function'   => array( TransferModule::class, 'checkBalances' ),
-				'show'       => $integration_type === 'checkout'
-			),
-			array(
-				'title'      => 'Intra account transfer',
-				'menu_title' => 'Intra Account Transfer',
-				'route'      => '/intra_account',
-				'function'   => array( TransferModule::class, 'transferBalance' ),
-				'show'       => $integration_type === 'checkout'
-			),
-			array(
-				'title'      => 'B2C Payout - Disbursement',
-				'menu_title' => 'Disburse Money (B2C)',
-				'route'      => '/b2c_payout',
-				'function'   => array( TransferModule::class, 'disburseMoney' ),
-				'show'       => $integration_type === 'checkout' && $is_b2c_enabled
-			),
-			array(
-				'title'      => 'Transfer History',
-				'menu_title' => 'Transfer History',
-				'route'      => '/transfers',
-				'function'   => array( TransferModule::class, 'transferHistory' ),
-				'show'       => $integration_type === 'checkout'
-			),
-			array(
-				'title'      => 'Agreements',
-				'menu_title' => 'Agreements',
-				'route'      => '/agreements',
-				'function'   => array( AgreementModule::class, 'agreementList' ),
-				'show'       => strpos( $integration_type, 'tokenized' ) === 0
-			),
+			// array(
+			// 	'title'      => 'Webhook notifications',
+			// 	'menu_title' => 'Webhook',
+			// 	'route'      => '/webhooks',
+			// 	'function'   => array( WebhookModule::class, 'webhooks' ),
+			// 	'show'       => $is_webhook_enabled
+			// ),
+			// array(
+			// 	'title'      => 'Check Balances',
+			// 	'menu_title' => 'Check Balances',
+			// 	'route'      => '/balances',
+			// 	'function'   => array( TransferModule::class, 'checkBalances' ),
+			// 	'show'       => $integration_type === 'checkout'
+			// ),
+			// array(
+			// 	'title'      => 'Intra account transfer',
+			// 	'menu_title' => 'Intra Account Transfer',
+			// 	'route'      => '/intra_account',
+			// 	'function'   => array( TransferModule::class, 'transferBalance' ),
+			// 	'show'       => $integration_type === 'checkout'
+			// ),
+			// array(
+			// 	'title'      => 'B2C Payout - Disbursement',
+			// 	'menu_title' => 'Disburse Money (B2C)',
+			// 	'route'      => '/b2c_payout',
+			// 	'function'   => array( TransferModule::class, 'disburseMoney' ),
+			// 	'show'       => $integration_type === 'checkout' && $is_b2c_enabled
+			// ),
+			// array(
+			// 	'title'      => 'Transfer History',
+			// 	'menu_title' => 'Transfer History',
+			// 	'route'      => '/transfers',
+			// 	'function'   => array( TransferModule::class, 'transferHistory' ),
+			// 	'show'       => $integration_type === 'checkout'
+			// ),
+			// array(
+			// 	'title'      => 'Agreements',
+			// 	'menu_title' => 'Agreements',
+			// 	'route'      => '/agreements',
+			// 	'function'   => array( AgreementModule::class, 'agreementList' ),
+			// 	'show'       => strpos( $integration_type, 'tokenized' ) === 0
+			// ),
 			array(
 				'title'      => 'Payment Settings',
 				'menu_title' => 'Settings',
@@ -182,7 +182,7 @@ class AdminDashboard {
 	 * @return void
 	 */
 	final public function beginInstall() {
-		$tableGenerator = new TableGeneration();
+		$tableGenerator = new TablesGenerator();
 		$tableGenerator->createTransactionTable();
 		// $tableGenerator->createWebhookTable();
 		// $tableGenerator->createAgreementMappingTable();

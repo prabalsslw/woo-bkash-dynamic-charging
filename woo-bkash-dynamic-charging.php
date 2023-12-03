@@ -43,6 +43,13 @@ require BKASH_DC_BASE_PATH . 'vendor/autoload.php';
 
 use bKash\PGW\DC\Admin\AdminDashboard;
 
+
+/**
+ * Initiating tables on plugin activation
+ */
+register_activation_hook( __FILE__, array( AdminDashboard::getInstance(), 'beginInstall' ) );
+
+
 if ( ! class_exists( 'WooCommerceBkashDC' ) ) {
     add_action( 'plugins_loaded', array( WooCommerceBkashDC::class, 'getInstance' ), 1 );
 }
