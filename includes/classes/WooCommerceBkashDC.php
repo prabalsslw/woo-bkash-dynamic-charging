@@ -115,10 +115,10 @@ class WooCommerceBkashDC {
 		_doing_it_wrong( __FUNCTION__, 'Cheating&#8217; huh?', $this->version );
 	}
 
-	// final public function installer() {
-	// 	$dashboard = AdminDashboard::GetInstance();
-	// 	$dashboard->BeginInstall();
-	// }
+	final public function installer() {
+		$dashboard = AdminDashboard::GetInstance();
+		$dashboard->BeginInstall();
+	}
 
 	/**
 	 * Return an instance of this class.
@@ -145,9 +145,6 @@ class WooCommerceBkashDC {
 	 */
 	final public function addGateway( array $methods ): array {
 		$methods[] = WC_Geteway_bKash_Dc::class;
-		// echo "<pre>";
-		// print_r($methods);
-		// exit;
 		return $methods;
 	}
 

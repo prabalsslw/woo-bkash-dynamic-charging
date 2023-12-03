@@ -13,8 +13,6 @@
     
 namespace bKash\PGW\DC;
 
-// use bKash\PGW\DC\Sanitizer;
-// use bKash\PGW\DC\Log;
 use Exception;
 use WC_AJAX;
 use WC_Logger;
@@ -25,7 +23,7 @@ use WP_Error;
 /**
  * WooCommerce bKash Payment Gateway for Dynamic Charging Product.
  *
- * @class   PaymentGatewayBkash
+ * @class   WC_Geteway_bKash_Dc
  * @extends WC_Payment_Gateway
  * @version 1.0.0
  * @package bKash\PGW
@@ -211,14 +209,14 @@ if (!class_exists('WC_Payment_Gateway')) return;
                 'title'       => 'Title',
                 'type'        => 'text',
                 'description' => 'This controls the title which the user sees during checkout.',
-                'default'     => 'bKash Payment Gateway',
+                'default'     => 'bKash Payment Gateway - Dynamic Charging.',
                 'desc_tip'    => true,
             ),
             'description'        => array(
                 'title'       => 'Description',
                 'type'        => 'text',
                 'description' => 'This controls the description which the user sees during checkout.',
-                'default'     => 'Pay with bKash PGW.',
+                'default'     => 'Pay with bKash Dynamic Charging Payment Gateway',
                 'desc_tip'    => true,
             ),
             'integration_type'   => array(
@@ -285,20 +283,6 @@ if (!class_exists('WC_Payment_Gateway')) return;
                 'description' => 'If Enabled, Sandbox mode will be applied (real payments will not be taken).',
                 'default'     => 'yes',
             ),
-            'app_key'            => array(
-                'title'       => 'Application Key',
-                'type'        => 'text',
-                'description' => 'Get your App Key from your bKash PGW account.',
-                'default'     => '',
-                'desc_tip'    => true,
-            ),
-            'app_secret'         => array(
-                'title'       => 'Application Secret Key',
-                'type'        => 'password',
-                'description' => 'Get your App Secret from your bKash PGW account.',
-                'default'     => '',
-                'desc_tip'    => true,
-            ),
             'username'           => array(
                 'title'       => 'Username',
                 'type'        => 'text',
@@ -310,6 +294,20 @@ if (!class_exists('WC_Payment_Gateway')) return;
                 'title'       => 'Password',
                 'type'        => 'password',
                 'description' => 'Get your password from your bKash PGW account.',
+                'default'     => '',
+                'desc_tip'    => true,
+            ),
+            'app_key'            => array(
+                'title'       => 'Application Key',
+                'type'        => 'text',
+                'description' => 'Get your App Key from your bKash PGW account.',
+                'default'     => '',
+                'desc_tip'    => true,
+            ),
+            'app_secret'         => array(
+                'title'       => 'Application Secret Key',
+                'type'        => 'password',
+                'description' => 'Get your App Secret from your bKash PGW account.',
                 'default'     => '',
                 'desc_tip'    => true,
             ),
@@ -382,11 +380,11 @@ if (!class_exists('WC_Payment_Gateway')) return;
         ) {
             // Show message if enabled and FORCE SSL is disabled and WordPress HTTPS plugin is not detected.
             $admin_checkout_setting_url = esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout' ) ); ?>
-            <div class="error ssl-error"><p>bKash PGW is enabled, but the<a href="
+            <div class="error ssl-error"><p>bKash PGW is enabled, but the <a href="
             <?php
                     esc_html_e( $admin_checkout_setting_url, 'bkash-for-woocommerce' );
             ?>
-                    ">Force SSL option</a>is
+                    ">Force SSL option</a> is
                     disabled;
                     your payment may not be secure! Please enable SSL and ensure your server has a valid SSL
                     certificate -
