@@ -183,7 +183,7 @@ if (!class_exists('WC_Payment_Gateway')) return;
         // add_action( 'woocommerce_api_' . $this->SUCCESS_CALLBACK_URL, array( $this, 'paymentSuccess' ) );
         // add_action( 'woocommerce_api_' . $this->FAILURE_CALLBACK_URL, array( $this, 'paymentFailure' ) );
         add_action( 'woocommerce_api_' . $this->EXECUTE_URL, array( $this, 'createPaymentCallbackProcess' ) );
-        // add_action( 'woocommerce_api_' . $this->PAYMENT_CANCEL_URL, array( $this, 'cancelPaymentProcess' ) );
+        add_action( 'woocommerce_api_' . $this->PAYMENT_CANCEL_URL, array( $this, 'cancelPaymentProcess' ) );
         // add_action( 'woocommerce_api_' . $this->CANCEL_AGREEMENT_URL, array( $this, 'cancelAgreementApi' ) );
         // add_action( 'woocommerce_api_' . $this->REVIEW_ORDER_URL, array( $this, 'processReviewOrderPayment' ) );
         // // WebhookModule
@@ -421,7 +421,7 @@ if (!class_exists('WC_Payment_Gateway')) return;
             $cbURL = get_site_url() . BKASH_DC_WC_API . $this->CALLBACK_URL . '?orderId=' . $order_id;
 
             $process = new Payments( $this->integration_type );
-            Log::debug( wp_json_encode($cbURL) );
+            // Log::debug( wp_json_encode($cbURL) );
             $process->executePayment( $this->get_return_url( $order ), $cbURL );
         } else {
             echo wp_json_encode(
@@ -440,5 +440,26 @@ if (!class_exists('WC_Payment_Gateway')) return;
      */
     public function webhook() {
                 
+    }
+
+    /**
+     * Output for the order received page.
+     *
+     * @access public
+     * @return void
+     */
+    final public function receiptPage() {
+        echo wp_kses_post( '<p>Thank you - your order is now pending payment.</p>' );
+    }
+
+    /**
+     * Output for the order received page.
+     *
+     * @access public
+     *
+     * @param $order_id
+     */
+    final public function thankYouPage( $order_id ) {
+        $this->extraDetails( $order_id );
     }
 }

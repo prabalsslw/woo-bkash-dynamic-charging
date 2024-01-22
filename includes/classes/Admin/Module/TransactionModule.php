@@ -28,7 +28,7 @@ class TransactionModule {
 			'All bKash Transaction',
 			'bkash_dc_transactions',
 			array(
-				'ORDER ID'         => 'order_id',
+				'ORDER ID'         => 'order_id_wcdc',
 				'INVOICE ID'       => 'invoice_id',
 				'PAYMENT ID'       => 'payment_id',
 				'TRANSACTION ID'   => 'trx_id',
