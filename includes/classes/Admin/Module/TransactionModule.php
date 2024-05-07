@@ -1,21 +1,11 @@
 <?php
-/**
- * Transaction Module
- *
- * @category    Module
- * @package     bkash-for-woocommerce
- * @author      bKash Developer <developer@bkash.com>
- * @copyright   Copyright 2023 bKash Limited. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE
- * @link        https://bkash.com
- */
 
 namespace bKash\PGW\DC\Admin\Module;
 
 use bKash\PGW\DC\Admin\AdminUtility;
 use bKash\PGW\DC\BkashApi;
 use bKash\PGW\DC\Models\Transaction;
-use bKash\PGW\DC\WooCommerceBkashDC;
+use bKash\PGW\DC\WC_Geteway_bKash_Dc;
 use bKash\PGW\DC\Sanitizer;
 use Exception;
 
@@ -33,6 +23,7 @@ class TransactionModule {
 				'PAYMENT ID'       => 'payment_id',
 				'TRANSACTION ID'   => 'trx_id',
 				'AMOUNT'           => 'amount',
+				'Service Fee'      => 'serviceFee',
 				'INTEGRATION TYPE' => 'integration_type',
 				'INTENT'           => 'intent',
 				'MODE'             => 'mode',
@@ -56,7 +47,7 @@ class TransactionModule {
 			$trx_id = Sanitizer::safePostValue( 'trxid' );
 
 			if ( ! empty( $trx_id ) ) {
-				$api  = new ApiComm();
+				$api  = new BkashApi();
 				$call = $api->searchTransaction( $trx_id );
 
 				if ( isset( $call['status_code'] ) && $call['status_code'] === 200 ) {
@@ -69,18 +60,18 @@ class TransactionModule {
 					if ( isset( $trx['statusMessage'] ) && $trx['statusMessage'] !== 'Successful' ) {
 						$trx = $trx['statusMessage'];
 					}
-					if ( isset( $trx['errorMessage'] ) && ! empty( $trx['errorMessage'] ) ) {
-						$trx = $trx['errorMessage'];
+					if ( isset( $trx['errorMessageEn'] ) && ! empty( $trx['errorMessageEn'] ) ) {
+						$trx = $trx['errorMessageEn'];
 					}
 				} else {
-					$trx = 'Cannot find the transaction from bKash server right now, try again';
+					$trx = 'Transaction information not found, try again';
 				}
 			}
 		} catch ( Exception $ex ) {
 			$trx = $ex->getMessage();
 		}
 
-		include_once BKASH_FW_BASE_PATH . '/includes/classes/Admin/pages/transaction_search.php';
+		include_once BKASH_DC_BASE_PATH . '/includes/classes/Admin/pages/transaction_search.php';
 	}
 
 
@@ -101,7 +92,7 @@ class TransactionModule {
 					if ( $amount > 0 ) {
 						if ( $amount <= $transaction->getAmount() ) {
 							try {
-								$wcB    = new PaymentGatewayBkash();
+								$wcB    = new WC_Geteway_bKash_Dc();
 								$refund = $wcB->process_refund( $transaction->getOrderID(), $amount, $reason );
 								if ( $refund ) {
 									$trx = $wcB->refundObj;
@@ -119,7 +110,7 @@ class TransactionModule {
 					}
 				} elseif ( $isRefundCheck ) {
 					try {
-						$wcB    = new PaymentGatewayBkash();
+						$wcB    = new WC_Geteway_bKash_Dc();
 						$refund = $wcB->queryRefund( $transaction->getOrderID() );
 						if ( $refund ) {
 							$trx = $refund;
@@ -137,6 +128,45 @@ class TransactionModule {
 			}
 		}
 
-		include_once BKASH_FW_BASE_PATH . '/includes/classes/Admin/pages/refund_transaction.php';
+		include_once BKASH_DC_BASE_PATH . '/includes/classes/Admin/pages/refund_transaction.php';
+	}
+
+	final public function queryRefund( int $order_id ) {
+		$order = wc_get_order( $order_id );
+		$id    = $order->get_transaction_id();
+
+		$response = '';
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$trxObject   = new Transaction();
+		$transaction = $trxObject->getTransaction( '', $id );
+		if ( $transaction ) {
+			if ( ! empty( $transaction->getRefundID() ) ) {
+				$api = new BkashApi();
+				$call = $api->refund(
+					null,
+					$transaction->getPaymentID(),
+					$transaction->getTrxID(),
+					null,
+					null
+				);
+
+				if ( isset( $call['status_code'] ) && $call['status_code'] === 200 ) {
+					return isset( $call['response'] ) && is_string( $call['response'] )
+						? json_decode( $call['response'], true ) : array();
+				}
+
+				$trx = 'Cannot check refund status using bKash server right now, try again';
+			} else {
+				$trx = 'This transaction is not refunded yet, try again';
+			}
+		} else {
+			$trx = 'Cannot find the transaction to query in your database, try again';
+		}
+
+		return $trx;
 	}
 }

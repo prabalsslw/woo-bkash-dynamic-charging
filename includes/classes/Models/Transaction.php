@@ -480,7 +480,7 @@ class Transaction {
 	}
 
 	private function buildTransaction( $transaction ): Transaction {
-		$this->orderID         = $transaction->order_id ?? null;
+		$this->orderID         = $transaction->order_id_wcdc ?? null;
 		$this->trxID           = $transaction->trx_id ?? null;
 		$this->paymentID       = $transaction->payment_id ?? null;
 		$this->invoiceID       = $transaction->invoice_id ?? null;
@@ -488,6 +488,7 @@ class Transaction {
 		$this->mode            = $transaction->mode ?? null;
 		$this->intent          = $transaction->intent ?? null;
 		$this->amount          = $transaction->amount ?? null;
+		$this->serviceFee      = $transaction->serviceFee ?? null;
 		$this->currency        = $transaction->currency ?? null;
 		$this->refundID        = $transaction->refund_id ?? null;
 		$this->refundAmount    = $transaction->refund_amount ?? null;

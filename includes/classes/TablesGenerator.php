@@ -35,6 +35,7 @@ class TablesGenerator {
                     `mode` VARCHAR(10) NULL,
                     `intent` VARCHAR(20) NULL,
                     `amount` decimal(15,2) NOT NULL,
+                    `serviceFee` decimal(15,2) NULL,
                     `currency` VARCHAR(10) NOT NULL,
                     `refund_id` VARCHAR(50) NULL,
                     `refund_amount` decimal(15,2) NULL,

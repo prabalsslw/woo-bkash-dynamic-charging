@@ -32,23 +32,7 @@ use bKash\PGW\DC\Sanitizer;
 							$old_input = Sanitizer::safeGetValue( $key ) ?? '';
 							?>
 							<label>
-								<input
-									type='text'
-									name='
-									<?php
-									esc_attr_e( $key, 'woo-bkash-dynamic-charging' );
-									?>
-									'
-									value='
-									<?php
-									esc_attr_e( $old_input, 'woo-bkash-dynamic-charging' );
-									?>
-									'
-									placeholder='
-									<?php
-									esc_attr_e( $filter, 'woo-bkash-dynamic-charging' );
-									?>
-									'/>
+								<input type="text" name="<?php esc_attr_e( $key, 'woo-bkash-dynamic-charging' );?>" value="<?php esc_attr_e( $old_input, 'woo-bkash-dynamic-charging' );?>" placeholder="<?php esc_attr_e( $filter, 'woo-bkash-dynamic-charging' ); ?>" autocomplete="off" />
 							</label>
 							<?php
 						}
@@ -56,11 +40,7 @@ use bKash\PGW\DC\Sanitizer;
 
 					$page_name = Sanitizer::safeGetValue( 'page' ) ?? '';
 					?>
-					<input type='hidden' name='page' value='
-					<?php
-					esc_attr_e( $page_name, 'woo-bkash-dynamic-charging' );
-					?>
-					'/>
+					<input type="hidden" name="page" value="<?php esc_attr_e( $page_name, 'woo-bkash-dynamic-charging' );?>" />
 					<button type="submit">Search</button>
 				</form>
 

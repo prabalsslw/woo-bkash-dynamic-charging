@@ -227,6 +227,7 @@ class Payments {
 								array(
 									'status' => $status,
 									'trx_id' => $paymentResp['trxID'] ?? '',
+									'serviceFee' => $paymentResp['serviceFee'] ?? ''
 								)
 							);
 

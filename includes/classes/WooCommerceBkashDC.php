@@ -84,7 +84,7 @@ class WooCommerceBkashDC {
 			}
 		} else {
 			add_action( 'admin_notices', array( $this, 'upgradeNotice' ) );
-			// AdminUtility::addFlashNotice( 'An upgraded version of WooCommerce is required' );
+			AdminUtility::addFlashNotice( 'An upgraded version of WooCommerce is required' );
 		}
 	}
 

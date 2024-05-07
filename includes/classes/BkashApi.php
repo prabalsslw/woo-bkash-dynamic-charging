@@ -289,4 +289,42 @@ class BkashApi {
 			'response'    => $response,
 		);
 	}
+
+	final public function searchTransaction( string $trx_id ): array {
+		$url = $this->constructed_url.'search/transaction';
+
+		if ( !empty($trx_id) ) {
+			$body = array(
+				'trxID' => $trx_id,
+			);
+
+			$response = $this->httpRequest( 'DC Search Transaction', $url, $http_status, 'POST', $body, $header );
+		}
+
+		return array(
+			'status_code' => $http_status,
+			'header'      => $header,
+			'response'    => $response,
+		);
+	}
+
+	final public function refund( $amount, $paymentID, $trxID, $SKU, $reason ): array {
+		$url = $this->constructed_url . 'payment/refund';
+
+		$body = array(
+			'amount'    => $amount,
+			'paymentId' => $paymentID,
+			'trxID'     => $trxID,
+			'sku'       => $SKU,
+			'reason'    => $reason,
+		);
+
+		$response = $this->httpRequest( 'Refund', $url, $http_status, 'POST', $body, $header );
+
+		return array(
+			'status_code' => $http_status,
+			'header'      => $header,
+			'response'    => $response,
+		);
+	}
 }

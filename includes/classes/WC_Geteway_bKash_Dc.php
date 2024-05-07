@@ -13,12 +13,15 @@
     
 namespace bKash\PGW\DC;
 
+
+use bKash\PGW\DC\Models\Transaction;
 use Exception;
 use WC_AJAX;
 use WC_Logger;
 use WC_Order;
 use WC_Payment_Gateway;
 use WP_Error;
+
 
 /**
  * WooCommerce bKash Payment Gateway for Dynamic Charging Product.
@@ -344,6 +347,13 @@ if (!class_exists('WC_Payment_Gateway')) return;
 
     }
 
+    final public function onUpdateResetToken( string $option_name, $old_value, $value ) {
+        if ( $option_name === 'woocommerce_' . BKASH_DC_PLUGIN_SLUG . '_settings' ) {
+            $bkashApi = new BkashApi();
+            $bkashApi->resetToken();
+        }
+    }
+
     /*
      * We're processing the payments here, everything about it is in Step 5
      */
@@ -382,7 +392,7 @@ if (!class_exists('WC_Payment_Gateway')) return;
             $admin_checkout_setting_url = esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout' ) ); ?>
             <div class="error ssl-error"><p>bKash PGW is enabled, but the <a href="
             <?php
-                    esc_html_e( $admin_checkout_setting_url, 'bkash-for-woocommerce' );
+                    esc_html_e( $admin_checkout_setting_url, 'woo-bkash-dynamic-charging' );
             ?>
                     ">Force SSL option</a> is
                     disabled;
@@ -461,5 +471,126 @@ if (!class_exists('WC_Payment_Gateway')) return;
      */
     final public function thankYouPage( $order_id ) {
         $this->extraDetails( $order_id );
+    }
+
+    private function extraDetails( $order_id = '' ) {
+        $order = wc_get_order( $order_id );
+        $id    = $order->get_transaction_id();
+
+        echo wp_kses_post( '<h2> Payment Details </h2>' ) . PHP_EOL;
+
+        $trxObj = new Transaction();
+        $trx    = $trxObj->getTransaction( '', $id );
+        if ( $trx ) {
+            include_once 'Admin/pages/extra_details.php';
+        }
+    }
+
+
+    final public function process_refund( $order_id, $amount = null, $reason = '' ) {
+        $order = wc_get_order( $order_id );
+        $id    = $order->get_transaction_id();
+        $response = '';
+
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $trxObject   = new Transaction();
+        $transaction = $trxObject->getTransaction( '', $id );
+
+        if ( $transaction ) {
+            if ( empty( $transaction->getRefundID() ) ) {
+                $refundAmount = $amount ?? $transaction->getAmount();
+
+                $bkashApi = new BkashApi();
+                $call = $bkashApi->refund(
+                    $refundAmount,
+                    $transaction->getPaymentID(),
+                    $transaction->getTrxID(),
+                    $transaction->getOrderID(),
+                    $reason ?? 'Refund Purpose'
+                );
+                // echo "<pre>"; 
+                // print_r($call);exit;
+                if ( isset( $call['status_code'] ) && $call['status_code'] === 200 ) {
+
+                    $trx = array();
+                    if ( isset( $call['response'] ) && is_string( $call['response'] ) ) {
+                        $trx = json_decode( $call['response'], true );
+                    }
+
+                    // If any error for tokenized
+                    if ( isset( $trx['statusMessage'] ) && $trx['statusMessage'] !== 'Successful' ) {
+                        $trx = $trx['statusMessage'];
+                    } elseif ( isset( $trx['errorCode'] ) ) { // If any error for checkout
+                        $trx = $trx['errorMessage'] ?? '';
+                    } elseif ( isset( $trx['transactionStatus'] ) && $trx['transactionStatus'] === 'Completed' ) {
+                        if ( isset( $trx['refundTrxId'] ) && ! empty( $trx['refundTrxId'] ) ) {
+                            $this->refundObj = $trx; // so that another class can get the information
+
+                            wc_create_refund(
+                                array(
+                                    'amount'         => $amount,
+                                    'reason'         => $reason,
+                                    'order_id_wcdc'  => $order_id,
+                                    'refund_payment' => false,
+                                )
+                            );
+
+                            $order->add_order_note(
+                                sprintf(
+                                    'bKash PGW: Refunded %s - Refund ID: %s',
+                                    $refundAmount,
+                                    $trx['refundTrxId']
+                                )
+                            );
+
+                            $transaction->update(
+                                array(
+                                    'refund_id'     => $trx['refundTrxId'],
+                                    'refund_amount' => $trx['amount'] ?? 0,
+                                ),
+                                array( 'invoice_id' => $transaction->getInvoiceID() )
+                            );
+
+                            if ( $this->debug === 'yes' ) {
+                                $this->log->add(
+                                    $this->id,
+                                    'bKash PGW order #' . $order_id . ' refunded successfully!'
+                                );
+                            }
+
+                            return true;
+                        }
+
+                        $trx = 'Refund was not successful, no refund id found, try again';
+                    } else {
+                        $trx = 'Refund was not successful, transaction is not in completed state, try again';
+                    }
+                } else {
+                    $trx = 'Cannot refund the transaction using bKash server right now, try again';
+                }
+            } else {
+                $trx = 'This transaction already has been refunded, try again';
+            }
+        } else {
+            $trx = 'Cannot find the transaction to refund in your database, try again';
+        }
+
+        if ( is_string( $trx ) ) {
+            $this->refundError = $trx;
+            $order->add_order_note( 'Error in refunding the order. ' . esc_html( $trx ) );
+
+            if ( $this->debug === 'yes' ) {
+                $this->log->add(
+                    $this->id,
+                    'Error in refunding the order #' . $order_id . '. bKash PGW response: '
+                    . print_r( esc_html( $response ), true )
+                );
+            }
+        }
+
+        return false;
     }
 }
