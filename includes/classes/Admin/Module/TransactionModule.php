@@ -84,6 +84,9 @@ class TransactionModule {
 		$isRefund      = ! empty( Sanitizer::hasPostField( 'refund' ) );
 		$isRefundCheck = ! empty( Sanitizer::hasPostField( 'check' ) );
 
+			echo $isRefundCheck; 
+
+
 		if ( ! empty( $trx_id ) ) {
 			$trxObject   = new Transaction();
 			$transaction = $trxObject->getTransaction( '', $trx_id );
@@ -131,42 +134,4 @@ class TransactionModule {
 		include_once BKASH_DC_BASE_PATH . '/includes/classes/Admin/pages/refund_transaction.php';
 	}
 
-	final public function queryRefund( int $order_id ) {
-		$order = wc_get_order( $order_id );
-		$id    = $order->get_transaction_id();
-
-		$response = '';
-
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$trxObject   = new Transaction();
-		$transaction = $trxObject->getTransaction( '', $id );
-		if ( $transaction ) {
-			if ( ! empty( $transaction->getRefundID() ) ) {
-				$api = new BkashApi();
-				$call = $api->refund(
-					null,
-					$transaction->getPaymentID(),
-					$transaction->getTrxID(),
-					null,
-					null
-				);
-
-				if ( isset( $call['status_code'] ) && $call['status_code'] === 200 ) {
-					return isset( $call['response'] ) && is_string( $call['response'] )
-						? json_decode( $call['response'], true ) : array();
-				}
-
-				$trx = 'Cannot check refund status using bKash server right now, try again';
-			} else {
-				$trx = 'This transaction is not refunded yet, try again';
-			}
-		} else {
-			$trx = 'Cannot find the transaction to query in your database, try again';
-		}
-
-		return $trx;
-	}
 }

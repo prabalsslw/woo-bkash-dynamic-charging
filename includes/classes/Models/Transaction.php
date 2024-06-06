@@ -501,7 +501,7 @@ class Transaction {
 	final public function getTransactionByOrderId( $order_id ) {
 		$tableName   = Sanitizer::safeSqlString( $this->tableName );
 		$whereValue  = Sanitizer::safeSqlString( $order_id ?? '' );
-		$sqlQuery    = "SELECT * FROM $tableName WHERE `order_id` = %s";
+		$sqlQuery    = "SELECT * FROM $tableName WHERE `order_id_wcdc` = %s";
 		$transaction = null;
 		if ( ! empty( $order_id ) && ! is_null( $this->wpdb ) ) {
 			$transaction = $this->wpdb->get_row(

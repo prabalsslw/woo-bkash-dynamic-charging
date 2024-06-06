@@ -132,7 +132,7 @@ class TablesGenerator {
 
 		if ( $wpdb->get_var( $this->prepareQuery( $table_name ) ) !== $table_name ) {
 			$sql = "CREATE TABLE $table_name (
-                    ID bigint NOT NULL AUTO_INCREMENT,
+                    id bigint NOT NULL AUTO_INCREMENT,
                     `receiver` VARCHAR(20) NOT NULL,
                     `amount` decimal(15,2) NOT NULL,
                     `currency` VARCHAR(3) NOT NULL,
@@ -142,12 +142,12 @@ class TablesGenerator {
                     `b2cFee` VARCHAR(40) NULL,
                     `initiationTime` timestamp NULL,
                     `completedTime` timestamp NULL,
-                    PRIMARY KEY (ID)
+                    PRIMARY KEY (id)
             ) $charset_collate;";
 
 			require_once ABSPATH . BKASH_UPGRADE_FILE;
 			dbDelta( $sql );
-			add_option( 'bkash_dc_agreement_mapping_table_version', $my_products_db_version );
+			add_option( 'bkash_dc_transfer_table_version', $my_products_db_version );
 		}
 	}
 }

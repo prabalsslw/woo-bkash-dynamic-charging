@@ -88,6 +88,7 @@ class BkashApi {
 		} else {
 			$headers['authorization'] = $this->token;
 			$headers['x-app-key']     = $this->app_key;
+			$headers['authorization'];
 		}
 		if ( ! is_null( $header ) ) {
 			$headers = array_merge( $headers, $header );
@@ -196,11 +197,11 @@ class BkashApi {
 				break;
 			case 'capture':
 				$api_path     = 'payment/confirm';
-				$extra_in_url = '/capture';
+				$extra_in_url = '';
 				break;
 			case 'void':
 				$api_path     = 'payment/confirm';
-				$extra_in_url = '/void';
+				$extra_in_url = '';
 				break;
 			default:
 				$api_path     = '';
@@ -209,8 +210,15 @@ class BkashApi {
 
 		
 		$url      = $this->constructed_url . $api_path . $extra_in_url;
-		$apiTitle = 'Tokenized ' . ucwords( $type ) . ' Payment';
-		$body     = array( 'paymentId' => $payment_id );
+		$apiTitle = 'DC ' . ucwords( $type ) . ' Payment';
+		if($type == 'capture' || $type == 'void') {
+			$body     = array( 
+				'paymentId' => $payment_id,
+				'confirmationType' => $type
+			);
+		} else {
+			$body     = array( 'paymentId' => $payment_id );
+		}
 
 		$response = $this->httpRequest($apiTitle,$url,$http_status,'POST',$body,$header);
 
@@ -326,5 +334,113 @@ class BkashApi {
 			'header'      => $header,
 			'response'    => $response,
 		);
+	}
+
+	final public function refundStatus( $paymentID, $trxID ): array {
+		$url = $this->constructed_url . 'query/refund';
+
+		$body = array(
+			'paymentId' => $paymentID,
+			'trxID'     => $trxID,
+		);
+
+		$response = $this->httpRequest( 'Query Refund', $url, $http_status, 'POST', $body, $header );
+
+		return array(
+			'status_code' => $http_status,
+			'header'      => $header,
+			'response'    => $response,
+		);
+	}
+
+	final public function capturePayment( string $payment_id ): array {
+		echo $payment_id;
+		return $this->executeCompleteOrCaptureVoid( $payment_id, 'capture' );
+	}
+
+	final public function voidPayment( string $payment_id ): array {
+		return $this->executeCompleteOrCaptureVoid( $payment_id, 'void' );
+	}
+
+	final public function checkBalances(): array {
+		$url = $this->constructed_url . 'query/organization/balance';
+
+		$response = $this->httpRequest( 'Query Organization Balance', $url, $http_status, 'GET', null, $header );
+
+		return array(
+			'status_code' => $http_status,
+			'header'      => $header,
+			'response'    => $response,
+		);
+
+		// throw new UnexpectedValueException( 'Query organization balance is only available in Checkout integration' );
+	}
+
+	final public function initiatePayout( $type ): array {
+		$url = $this->constructed_url . 'payout/initiate';
+
+		$body = array(
+			'type' => $type,
+    		'reference' => $type  
+		);
+
+		$response = $this->httpRequest( 'Initiate Payout', $url, $http_status, 'POST', $body, $header );
+
+		return array(
+			'status_code' => $http_status,
+			'header'      => $header,
+			'response'    => $response,
+		);
+		// throw new UnexpectedValueException( 'Intra Account Transfer is only available in Checkout integration' );
+	}
+
+	final public function intraAccountTransfer( $amount, string $transferType ): array {
+		$url = $this->constructed_url . 'payout/intra-account/transfer';
+		
+		$initiatePayoutResponse = $this->initiatePayout("INTRA");
+		$arrayResponse = json_decode($initiatePayoutResponse['response'], true);
+		$payoutId = $arrayResponse['payoutID'];
+
+		$body = array(
+			'payoutID' => $payoutId,
+		    'amount' => $amount,
+		    'currency' => 'BDT',
+		    'transferType' => $transferType
+		);
+
+		$response = $this->httpRequest( 'Intra Account Transfer', $url, $http_status, 'POST', $body, $header );
+
+		return array(
+			'status_code' => $http_status,
+			'header'      => $header,
+			'response'    => $response,
+		);
+		// throw new UnexpectedValueException( 'Intra Account Transfer is only available in Checkout integration' );
+	}
+
+	final public function b2cPayout( $amount, string $invoiceNumber, string $receiver ): array {
+		$url = $this->constructed_url . 'payout/b2c';
+
+		$initiatePayoutResponse = $this->initiatePayout("B2C");
+		$arrayResponse = json_decode($initiatePayoutResponse['response'], true);
+		$payoutId = $arrayResponse['payoutID'];
+
+		$body = array(
+			'payoutID' 				=> $payoutId,
+		    'amount' 				=> $amount,
+		    'currency' 				=> "BDT",
+		    'merchantInvoiceNumber' => $invoiceNumber,
+		    'receiverMSISDN' 		=> $receiver
+		);
+
+		$response = $this->httpRequest( 'B2C Payout', $url, $http_status, 'POST', $body, $header );
+
+		return array(
+			'status_code' => $http_status,
+			'header'      => $header,
+			'response'    => $response,
+		);
+
+		// throw  new UnexpectedValueException( 'B2C Payout is only available in Checkout integration' );
 	}
 }

@@ -264,30 +264,12 @@ class Payments {
 								}
 
 								// Return thank you page redirect.
-								if ( $this->integration_type === 'checkout' ) {
-									echo wp_json_encode(
-										array(
-											'result'   => 'success',
-											'redirect' => $orderPageURL,
-										)
-									);
-									die();
-								}
 								wp_safe_redirect( $orderPageURL );
 								die();
 							}
 
 							if ( $updated && isset( $paymentResp['paymentId'] ) && ! empty( $paymentResp['paymentId'] ) ) {
 								$msg = 'Transaction was not successful, last transaction status: ' . $paymentResp['transactionStatus'] ?? 'NO_STATUS_EXECUTE';
-								if ( $this->integration_type === 'checkout' ) {
-									echo wp_json_encode(
-										array(
-											'result'  => 'failure',
-											'message' => $msg,
-										)
-									);
-									die();
-								}
 
 								wc_add_notice( $msg, 'error' );
 								wp_safe_redirect( wc_get_checkout_url() );
@@ -313,7 +295,33 @@ class Payments {
 					$message = $this->processResponse( 'Communication issue with payment gateway' );
 				}
 			}
+		} else {
+			// transaction failed/cancelled.
+			$status = str_replace( array( 'cancel', 'failure' ), array( 'Cancelled', 'Failed' ), $status );
+			if ( $transaction->getStatus() !== 'Completed' ) {
+				$transaction->update(
+					array(
+						'status' => esc_html( $status ),
+					)
+				);
+				$order->add_order_note( 'bKash Payment is not successful. Status => ' . esc_html( $status ) );
+			} else {
+				$order->add_order_note(
+					'bKash Payment is already in Completed state. Tried to change Status to => '
+					. esc_html( $status )
+				);
+			}
+
+			$message = $this->processResponse( 'Transaction is ' . $status );
 		}
+
+		$order->add_order_note( 'bKash PGW payment declined (' . $message . ')' );
+
+		wc_add_notice( $message, 'error' );
+		wp_safe_redirect( wc_get_cart_url() );
+		
+		// Return message to customer.
+		die();
 	}
 
 

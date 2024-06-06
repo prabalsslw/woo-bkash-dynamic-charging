@@ -154,7 +154,7 @@ if (!class_exists('WC_Payment_Gateway')) return;
 
         if ( is_admin() ) {
             add_action( 'admin_notices', array( $this, 'checks' ) );
-            // add_action( 'admin_notices', array( $this, 'displayFlashNotices' ), 12 );
+            add_action( 'admin_notices', array( $this, 'displayFlashNotices' ), 12 );
 
             add_action( 'woocommerce_receipt_' . $this->id, array( $this, 'receiptPage' ) );
             add_action(
@@ -180,23 +180,19 @@ if (!class_exists('WC_Payment_Gateway')) return;
             10,
             2
         );
-        // add_action( 'woocommerce_order_status_cancelled', array( __CLASS__, 'voidTransactionOnCanceled' ), 10, 2 );
+        add_action( 'woocommerce_order_status_cancelled', array( __CLASS__, 'voidTransactionOnCanceled' ), 10, 2 );
 
         add_action( 'woocommerce_api_' . $this->CALLBACK_URL, array( $this, 'createPaymentCallbackProcess' ) );
-        // add_action( 'woocommerce_api_' . $this->SUCCESS_CALLBACK_URL, array( $this, 'paymentSuccess' ) );
-        // add_action( 'woocommerce_api_' . $this->FAILURE_CALLBACK_URL, array( $this, 'paymentFailure' ) );
+        add_action( 'woocommerce_api_' . $this->SUCCESS_CALLBACK_URL, array( $this, 'paymentSuccess' ) );
+        add_action( 'woocommerce_api_' . $this->FAILURE_CALLBACK_URL, array( $this, 'paymentFailure' ) );
         add_action( 'woocommerce_api_' . $this->EXECUTE_URL, array( $this, 'createPaymentCallbackProcess' ) );
         add_action( 'woocommerce_api_' . $this->PAYMENT_CANCEL_URL, array( $this, 'cancelPaymentProcess' ) );
         // add_action( 'woocommerce_api_' . $this->CANCEL_AGREEMENT_URL, array( $this, 'cancelAgreementApi' ) );
-        // add_action( 'woocommerce_api_' . $this->REVIEW_ORDER_URL, array( $this, 'processReviewOrderPayment' ) );
-        // // WebhookModule
-        // add_action( 'woocommerce_api_' . $this->WEBHOOK_URL, array( $this, 'webhook' ) );
+        add_action( 'woocommerce_api_' . $this->REVIEW_ORDER_URL, array( $this, 'processReviewOrderPayment' ) );
 
+        add_action( 'woocommerce_api_' . $this->WEBHOOK_URL, array( $this, 'webhook' ) );
         // reset token when setting changes
-        // add_action( 'update_option', array( $this, 'onUpdateResetToken' ), 10, 3 );
-
-        // You can also register a webhook here
-        // add_action( 'woocommerce_api_{webhook name}', array( $this, 'webhook' ) );
+        add_action( 'update_option', array( $this, 'onUpdateResetToken' ), 10, 3 );
     }
 
     public function init_form_fields(){
@@ -227,9 +223,9 @@ if (!class_exists('WC_Payment_Gateway')) return;
                 'type'        => 'select',
                 'description' => 'Payment will be initiated with selected bKash PGW integration type',
                 'options'     => array(
-                    'paymentonly'    => 'Payment Only (Tokenized Without-Agreement)',
-                    'tokenized'      => 'Tokenized (With Agreement)',
-                    'tokenized-both' => 'Tokenized (With and without Agreement)',
+                    'paymentonly'    => 'Payment Only (Without-Agreement)',
+                    // 'tokenized'      => 'Tokenized (With Agreement)',
+                    // 'tokenized-both' => 'Tokenized (With and without Agreement)',
                 ),
                 'default'     => 'paymentonly',
                 'desc_tip'    => true,
@@ -274,10 +270,10 @@ if (!class_exists('WC_Payment_Gateway')) return;
                 'type'        => 'checkbox',
                 'label'       => 'Enable Webhook listener',
                 'default'     => 'no',
-                'description' => 'Demo',//sprintf(
-                    // 'Share this webhook URL to bKash team - <code>%s</code>',
-                    // esc_url( $this->siteUrl . BKASH_FW_WC_API . $this->WEBHOOK_URL )
-                // ),
+                'description' => sprintf(
+                    'Share this webhook URL to bKash team - <code>%s</code>',
+                    esc_url( $this->siteUrl . BKASH_DC_WC_API . $this->WEBHOOK_URL )
+                ),
             ),
             'sandbox'            => array(
                 'title'       => 'Sandbox',
@@ -332,6 +328,18 @@ if (!class_exists('WC_Payment_Gateway')) return;
         }        
     }
 
+    final public function isAvailable(): bool {
+        if ( $this->enabled === 'no' || ( ! is_ssl() && 'no' === $this->sandbox ) ) {
+            return false;
+        }
+
+        if ( ! $this->app_key || ! $this->app_secret || 'BDT' !== get_woocommerce_currency() ) {
+            return false;
+        }
+
+        return true;
+    }
+
     /*
      * Custom CSS and JS, in most cases required only when you decided to go with a custom credit card form
      */
@@ -347,6 +355,20 @@ if (!class_exists('WC_Payment_Gateway')) return;
 
     }
 
+    final public function cancelPaymentProcess() {
+
+        $order_id = Sanitizer::safePostValue( 'orderId' );
+        if ( ! $order_id ) {
+            $order_id = Sanitizer::safeGetValue( 'orderId' );
+        }
+
+        $process = new Payments( $this->integration_type );
+        $resp    = $process->cancelPayment( $order_id );
+        echo wp_json_encode( $resp );
+
+        die();
+    }
+
     final public function onUpdateResetToken( string $option_name, $old_value, $value ) {
         if ( $option_name === 'woocommerce_' . BKASH_DC_PLUGIN_SLUG . '_settings' ) {
             $bkashApi = new BkashApi();
@@ -354,13 +376,75 @@ if (!class_exists('WC_Payment_Gateway')) return;
         }
     }
 
-    /*
-     * We're processing the payments here, everything about it is in Step 5
-     */
+    final public function capture_charge( float $amount, WC_Order $order ): WP_Error {
+        return new WP_Error(
+            'capture-error',
+            sprintf(
+                'There was an error capturing amount of %s the charge for order: %s.',
+                $amount,
+                $order->get_id()
+            )
+        );
+    }
+
+    
+    final public function void_charge( WC_Order $order ) {
+        $id = $order->get_transaction_id();
+        try {
+            $response = $this->gateway->transaction()->void( $id );
+            if ( $response->success ) {
+                $this->save_order_meta( $response->transaction, $order );
+                $order->update_status( 'cancelled' );
+                $order->add_order_note( sprintf( 'Transaction %1$s has been voided in bKash.', $id ) );
+
+                return true;
+            }
+
+            return new WP_Error(
+                'capture-error',
+                sprintf( 'There was an error voiding the transaction. Reason: %1$s', wp_json_encode( $response ) )
+            );
+        } catch ( Exception $e ) {
+            return new WP_Error(
+                'capture-error',
+                sprintf( 'There was an error voiding the transaction. Reason: %1$s', wp_json_encode( $e ) )
+            );
+        }
+    }
+
+    final public function processReviewOrderPayment() {
+        $order_id = Sanitizer::safePostValue( 'order_id' );
+        if ( ! $order_id ) {
+            $order_id = Sanitizer::safeGetValue( 'order_id' );
+        }
+
+        header( 'Content-Type: application/json' );
+
+        if ( $order_id ) {
+            echo wp_json_encode( $this->process_payment( $order_id ) );
+        } else {
+            echo wp_json_encode(
+                array(
+                    'result'  => 'failure',
+                    'message' => 'Order ID is missing',
+                )
+            );
+        }
+        die();
+    }
+
     public function process_payment( $order_id ) {
         $cbURL = get_site_url() . BKASH_DC_WC_API . $this->CALLBACK_URL . '?orderId=' . $order_id;
 
 	    return ( new Payments( $this->integration_type ) )->createPayment( $order_id, $this->intent, $cbURL );     
+    }
+
+    final public function paymentSuccess() {
+        // for later use
+    }
+
+    final public function paymentFailure() {
+        // for later use
     }
 
 
@@ -445,11 +529,91 @@ if (!class_exists('WC_Payment_Gateway')) return;
     }
 
 
-    /*
-     * In case you need a webhook, like PayPal IPN etc
-     */
-    public function webhook() {
-                
+    public static function voidTransactionOnCanceled( $order_id, $order ) {
+        $trx            = '';
+        $orderDetails   = $order;
+        $trxId          = $orderDetails->get_transaction_id();
+        $payment_method = $orderDetails->get_payment_method();
+
+        if ( $payment_method === BKASH_DC_PLUGIN_SLUG ) {
+            $trxObj      = new Transaction();
+            $transaction = $trxObj->getTransaction( '', $trxId );
+            if ( $transaction ) {
+                if ( $transaction->getStatus() === 'Authorized' ) {
+                    $comm      = new BkashApi();
+                    $void_call = $comm->voidPayment( $transaction->getPaymentID() );
+
+                    if ( isset( $void_call['status_code'] ) && $void_call['status_code'] === 200 ) {
+                        $voided = array();
+                        if ( isset( $void_call['response'] ) && is_string( $void_call['response'] ) ) {
+                            $voided = json_decode( $void_call['response'], true );
+                        }
+
+                        if ( $voided ) {
+
+                            // If any error for tokenized
+                            if ( isset( $voided['statusMessage'] ) && $voided['statusMessage'] !== 'Successful' ) {
+                                $trx = $voided['statusMessage'];
+                            } elseif ( isset( $voided['errorCode'] ) ) { // If any error for checkout
+                                $trx = $voided['errorMessage'] ?? '';
+                            } elseif ( isset( $voided['transactionStatus'] ) && $voided['transactionStatus'] === BKASH_DC_CANCELLED_STATUS
+                            ) {
+                                $trx = $voided;
+
+                                $updated = $trxObj->update(
+                                    array( 'status' => BKASH_DC_CANCELLED_STATUS ),
+                                    array( 'trx_id' => $transaction->getTrxID() )
+                                );
+                                if ( ! $updated ) {
+                                    // on update error
+                                    $orderDetails->add_order_note(
+                                        'bKash PGW: Status update failed in DB, ' . $trxObj->errorMessage
+                                    );
+                                }
+
+                                $orderDetails->add_order_note(
+                                    sprintf(
+                                        'bKash PGW: Payment was updated as Void of amount %s - Payment ID: %s',
+                                        $transaction->getAmount(),
+                                        $voided['trxID']
+                                    )
+                                );
+                            } else {
+                                $trx = 'Transfer is not possible right now. try again';
+                            }
+                        } else {
+                            $trx = 'Cannot find the transaction in your database, try again';
+                        }
+                    } else {
+                        $trx = 'Cannot void using bKash server right now, try again';
+                    }
+                } else {
+                    $trx = 'Transaction is not in authorized state, thus ignore, try again';
+                }
+            }
+        }
+
+        if ( isset( $trx ) && ! empty( $trx ) ) {
+            if ( is_string( $trx ) ) {
+                self::addFlashNotice( 'Void Error, ' . $trx );
+            } elseif ( is_array( $trx ) ) {
+                // Void Success
+                self::addFlashNotice( 'Payment has been voided', 'success' );
+            }
+        }
+    }
+
+    final public function webhook() {
+        if ( isset( $this->is_webhook ) && $this->is_webhook === 'yes' ) {
+            $webhook = new WebhookProcessor( wc_get_logger(), true );
+            $webhook->processRequest();
+        } else {
+            $this->log->add( $this->id, 'WebhookModule is not enabled in settings' );
+        }
+        $payload = (array) json_decode( file_get_contents( 'php://input' ), true );
+        $this->log->add( $this->id, 'WEBHOOK => BODY: ' . print_r( $payload, true ) );
+
+        die();
     }
 
     /**
@@ -483,6 +647,12 @@ if (!class_exists('WC_Payment_Gateway')) return;
         $trx    = $trxObj->getTransaction( '', $id );
         if ( $trx ) {
             include_once 'Admin/pages/extra_details.php';
+        }
+    }
+
+    final public function emailInstructions( WC_Order $order, bool $sent_to_admin, bool $plain_text = false ) {
+        if ( ! $sent_to_admin && $this->id === $order->get_payment_method() && $order->has_status( 'on-hold' ) ) {
+            $this->extraDetails( $order->get_id() );
         }
     }
 
@@ -592,5 +762,164 @@ if (!class_exists('WC_Payment_Gateway')) return;
         }
 
         return false;
+    }
+
+    final public function queryRefund( int $order_id ) {
+        $order = wc_get_order( $order_id );
+        $id    = $order->get_transaction_id();
+
+        $response = '';
+
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $trxObject   = new Transaction();
+        $transaction = $trxObject->getTransaction( '', $id );
+        if ( $transaction ) {
+            if ( ! empty( $transaction->getRefundID() ) ) {
+                $comm = new BkashApi();
+                $call = $comm->refundStatus(
+                    $transaction->getPaymentID(),
+                    $transaction->getTrxID()
+                );
+    
+                if ( isset( $call['status_code'] ) && $call['status_code'] === 200 ) {
+                    return isset( $call['response'] ) && is_string( $call['response'] )
+                        ? json_decode( $call['response'], true ) : array();
+                }
+
+                $trx = 'Cannot check refund status using bKash server right now, try again';
+            } else {
+                $trx = 'This transaction is not refunded yet, try again';
+            }
+        } else {
+            $trx = 'Cannot find the transaction to query in your database, try again';
+        }
+
+        return $trx;
+    }
+
+    public static function captureTransactionFromStatus( int $order_id, WC_Order $order ) {
+        $orderDetails   = wc_get_order( $order_id );
+        $id             = $orderDetails->get_transaction_id();
+        $payment_method = $orderDetails->get_payment_method();
+
+        if ( $payment_method === BKASH_DC_PLUGIN_SLUG ) {
+            $trxObj      = new Transaction();
+            $transaction = $trxObj->getTransaction( '', $id );
+
+            if ( $transaction ) {
+                if ( $transaction->getStatus() === 'Authorized' ) {
+                    $comm        = new BkashApi();
+                    $captureCall = $comm->capturePayment( $transaction->getPaymentID() );
+
+                    if ( isset( $captureCall['status_code'] ) && $captureCall['status_code'] === 200 ) {
+                        $captured = array();
+                        if ( isset( $captureCall['response'] ) && is_string( $captureCall['response'] ) ) {
+                            $captured = json_decode( $captureCall['response'], true );
+                        }
+                        if ( $captured ) {
+                            // If any error for tokenized
+                            if ( isset( $captured['statusMessage'] ) && $captured['statusMessage'] !== 'Successful' ) {
+                                $trx = $captured['statusMessage'];
+                            } elseif ( isset( $captured['errorCode'] ) ) { // If any error for checkout
+                                $trx = $captured['errorMessage'] ?? '';
+                            } elseif ( isset( $captured['transactionStatus'] ) && $captured['transactionStatus'] === BKASH_DC_COMPLETED_STATUS
+                            ) {
+                                $trx = $captured;
+
+                                $updated = $trxObj->update(
+                                    array( 'status' => BKASH_DC_COMPLETED_STATUS ),
+                                    array( 'trx_id' => $transaction->getTrxID() )
+                                );
+                                if ( ! $updated ) {
+                                    // on update error
+                                    $orderDetails->add_order_note(
+                                        sprintf(
+                                            'bKash PGW: Status update failed in DB, %s',
+                                            $trxObj->errorMessage
+                                        )
+                                    );
+                                }
+
+                                $orderDetails->add_order_note(
+                                    sprintf(
+                                        'bKash PGW: Payment Capture of amount %s - Payment ID: %s',
+                                        $transaction->getAmount(),
+                                        $captured['trxID']
+                                    )
+                                );
+                            } else {
+                                $trx = 'Transfer is not possible right now. try again';
+                            }
+                        } else {
+                            $trx = 'Cannot parse capture response from API, try again';
+                        }
+                    } else {
+                        $trx = 'Cannot capture using bKash server right now, try again';
+                    }
+                } else {
+                    $trx = 'Transaction is not in authorized state, thus ignore, try again';
+                }
+            } else {
+                $trx = 'no transaction found with this order, try again';
+            }
+        } else {
+            // payment gateway is not bKash, try again
+            $trx = '';
+        }
+
+        if ( isset( $trx ) && ! empty( $trx ) ) {
+            if ( is_string( $trx ) ) {
+                // error occurred, show message
+                // $orderDetails->update_status('on-hold', $trx, false);
+                self::addFlashNotice( 'Capture Error, ' . $trx );
+            } elseif ( is_array( $trx ) ) {
+                // Capture Success
+                self::addFlashNotice( 'Payment has been captured', 'success' );
+            }
+        }
+    }
+
+
+    public static function addFlashNotice( $notice = '', $type = 'warning', $dismissible = true ) {
+        // Here we return the notices saved on our option, if there are not notices, then an empty array is returned
+        $notices = get_option( 'dc_bKash_flash_notices', array() );
+
+        $dismissible_text = ( $dismissible ) ? 'is-dismissible' : '';
+
+        // We add our new notice.
+        $notices[] = array(
+            'notice'      => $notice,
+            'type'        => $type,
+            'dismissible' => $dismissible_text,
+        );
+
+        // Then we update the option with our notices array
+        update_option( 'dc_bKash_flash_notices', $notices );
+    }
+
+    final public function displayFlashNotices() {
+        $notices = get_option( 'dc_bKash_flash_notices', array() );
+
+        // Iterate through our notices to be displayed and print them.
+        foreach ( $notices as $notice ) {
+            printf(
+                '<div class="notice notice-%1$s %2$s"><p>%3$s</p></div>',
+                esc_attr( $notice['type'] ),
+                $notice['dismissible'],
+                esc_html( $notice['notice'] )
+            );
+        }
+
+        // Now we reset our options to prevent notices being displayed forever.
+        if ( ! empty( $notices ) ) {
+            delete_option( 'dc_bKash_flash_notices' );
+        }
+    }
+
+    final public function getTransactionUrl( WC_Order $order ): string {
+        return $this->get_transaction_url( $order );
     }
 }
