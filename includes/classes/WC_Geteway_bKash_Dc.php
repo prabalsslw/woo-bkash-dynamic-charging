@@ -193,6 +193,10 @@ if (!class_exists('WC_Payment_Gateway')) return;
         add_action( 'woocommerce_api_' . $this->WEBHOOK_URL, array( $this, 'webhook' ) );
         // reset token when setting changes
         add_action( 'update_option', array( $this, 'onUpdateResetToken' ), 10, 3 );
+        add_action( 'before_woocommerce_init', function() {
+        if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );}
+        } );
     }
 
     public function init_form_fields(){
@@ -223,7 +227,7 @@ if (!class_exists('WC_Payment_Gateway')) return;
                 'type'        => 'select',
                 'description' => 'Payment will be initiated with selected bKash PGW integration type',
                 'options'     => array(
-                    'paymentonly'    => 'Payment Only (Without-Agreement)',
+                    'paymentonly'    => 'Dynamic Charginmg - Without Agreement (Payment Only)',
                     // 'tokenized'      => 'Tokenized (With Agreement)',
                     // 'tokenized-both' => 'Tokenized (With and without Agreement)',
                 ),
@@ -255,7 +259,7 @@ if (!class_exists('WC_Payment_Gateway')) return;
                 'default'     => 'no',
                 'description' => sprintf(
                     'Log bKash PGW events inside <code>%s</code>',
-                    esc_html( wc_get_log_file_path( $this->id ) )
+                    esc_html('WooCommerce >> Status >> Logs')
                 ),
             ),
             'enable_b2c'         => array(

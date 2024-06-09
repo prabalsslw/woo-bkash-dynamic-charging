@@ -4,15 +4,15 @@
  * Description:       A bKash Dynamic Charging payment gateway plugin for WooCommerce.
  * Version:           1.0.0
  * Author:            bKash Limited
- * Author URI:        http://developer.bka.sh
+ * Author URI:        https://github.com/prabalsslw/woo-bkash-dynamic-charging
  * Requires at least: 5.1
- * Tested up to:      6.4.1
+ * Tested up to:      6.5.4
  * Text Domain:       woo-bkash-dynamic-charging
  * Domain Path:       languages
  * Network:           false
  * License:           GPL v2 or later
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * GitHub Plugin URI: https://github.com/bKash-developer/bKash-for-woocommerce
+ * GitHub Plugin URI: https://github.com/bkash-developer
  * 
  * Fired during plugin activation.
  *
