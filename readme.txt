@@ -28,7 +28,7 @@ bKash PGW plugin is available for Merchants in Bangladesh, to accepts payments f
 * File write permission for wp-content directory.
 
 ### Non-Technical Requirements:
-* Active bKash Merchant Wallet.
+* Active bKash Dynamic Charging Merchant Wallet.
 * bKash payment gateway credentials (Sandbox and Production)
 
 
@@ -38,12 +38,7 @@ This plugin supports below environments of bKash payment gateway.
     * Production
 
 ### Available Payment Methods for bKash Payment Gateway in this plugin
-* Checkout - Sale (Regular Checkout)
-* Checkout - Authorised and Capture Payment
-* Tokenized - Without Agreement
-* Tokenized - With Agreement Only
-* Tokenized - Agreement and Without Agreement
-* Tokenized -  Authorised and Capture Payment
+* Dynamic Charging - Without Agreement(Payment Only)
 
 ### Additional Features of different bKash payment gateway products.
 * Merchant Wallet Balance Check (In Checkout Only)
@@ -60,8 +55,7 @@ This plugin supports below environments of bKash payment gateway.
 * Intra account transfer
 * Disburse Money
 * Transfer History
-* Refund a Transaction
-* Agreements
+* Refund
 * Web-hooks
 * Payment Settings
 
@@ -111,7 +105,7 @@ This section describes how to install the plugin and get it working.
 
 * Fill in the following credentials.
     - Enable - Enable bKash PGW
-    - Title – bKash Payment Gateway
+    - Title – bKash WooCommerce - Dynamic Charging
     - Description - Pay with bKash PGW.
     - Integration Type – Checkout/Checkout URL/Tokenized (With Agreement)/Tokenized (Without Agreement)
     - Intent – Sale/Authorized (Intent of the payment. For checkout the value should be "sale".)
@@ -191,23 +185,5 @@ Ans: Visit this link for the tutorial - https://drive.google.com/file/d/15hXTl-K
 4. Transaction list for admin to check
 
 == Changelog ==
-= 1.0.9 =
-* Updated WP version support to 6.3.1 and blank page issue resolved.
-= 1.0.8 =
-* Updated WP version support to 6.0
-= 1.0.7 =
-* Escaped Echos
-= 1.0.6 =
-* Adopted recommendation from code scanning tools. also fixed issues raised by WP team.
-= 1.0.5 =
-* Escaped variables, added cancel payment, colored transaction list status.
-= 1.0.4 =
-* Minor bug fix of unwanted message during capturing a non-bKash payment.
-= 1.0.3 =
-* Added Search and Filter functionalities in list tables.
-= 1.0.2 =
-* Wordpress recommended optimisation finalisation
-= 1.0.1 =
-* Wordpress recommended optimisation
 = 1.0.0 =
-* First release with all features
+* Tested upto wordpress 6.5.4
