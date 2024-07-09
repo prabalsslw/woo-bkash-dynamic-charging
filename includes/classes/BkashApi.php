@@ -10,6 +10,7 @@ class BkashApi {
 	public $debug;
 	private $enabled;
 	private $integration_product = 'paymentonly';
+	private $intent;
 	private $sandbox;
 	private $api_version;
 	private $enable_b2c;
