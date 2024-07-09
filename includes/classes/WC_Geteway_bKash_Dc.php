@@ -166,7 +166,6 @@ if (!class_exists('WC_Payment_Gateway')) return;
             );
         }
         // add_action( 'wp_enqueue_scripts', array( $this, 'paymentScripts' ) );
-        add_action( 'woocommerce_thankyou_' . $this->id, array( $this, 'thankYouPage' ) );
 
         // Customer Emails.
         // add_action( 'woocommerce_email_before_order_table', array( $this, 'emailInstructions' ), 10, 3 );
@@ -197,6 +196,7 @@ if (!class_exists('WC_Payment_Gateway')) return;
         if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
             \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );}
         } );
+        add_action( 'woocommerce_thankyou_' . $this->id, array( $this, 'thankYouPage' ) );
     }
 
     public function init_form_fields(){
@@ -644,6 +644,12 @@ if (!class_exists('WC_Payment_Gateway')) return;
     private function extraDetails( $order_id = '' ) {
         $order = wc_get_order( $order_id );
         $id    = $order->get_transaction_id();
+        
+        // echo "<pre>";
+        // echo $id;
+        // // print_r($order);
+        
+        // exit;
 
         echo wp_kses_post( '<h2> Payment Details </h2>' ) . PHP_EOL;
 

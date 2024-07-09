@@ -6,7 +6,7 @@
  * Author:            bKash Limited
  * Author URI:        https://github.com/prabalsslw/woo-bkash-dynamic-charging
  * Requires at least: 5.1
- * Tested up to:      6.5.4
+ * Tested up to:      6.5.5
  * Text Domain:       woo-bkash-dynamic-charging
  * Domain Path:       languages
  * Network:           false

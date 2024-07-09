@@ -35,6 +35,7 @@ class Transaction {
 	private $transactionType;
 	private $customerNumber;
 	private $merchantNumber;
+	private $serviceFee;
 	private $intent;
 	private $tableName;
 	private $wpdb;
@@ -383,6 +384,16 @@ class Transaction {
 	 */
 	final public function setIntent( string $intent ): Transaction {
 		$this->intent = $intent;
+
+		return $this;
+	}
+
+	final public function getServiceFee() {
+		return $this->serviceFee;
+	}
+
+	final public function setServiceFee( string $serviceFee ): Transaction {
+		$this->intent = $serviceFee;
 
 		return $this;
 	}

@@ -233,10 +233,16 @@ class Payments {
 
 							if ( $updated && isset( $paymentResp['trxID'] ) && ! empty( $paymentResp['trxID'] ) ) {
 								// Payment complete.
+								$transaction_id = $paymentResp['trxID'] ?? '';
 								if ( $paymentResp['transactionStatus'] === 'Authorized' ) {
 									$order->update_status( 'on-hold' );
+									$order->set_transaction_id($transaction_id);
+									$order->save();
 								} elseif ( $paymentResp['transactionStatus'] === 'Completed' ) {
 									$order->payment_complete();
+									$order->set_transaction_id($transaction_id);
+									$order->save();
+							
 								} else {
 									$order->update_status( 'pending' );
 								}
